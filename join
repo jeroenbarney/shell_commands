@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -Eeu
+
+function join(){
+  cat /dev/stdin | jq -R | jq -sr --arg sign "${1}" --arg start "${2:-}" --arg end "${3:-}" \
+    '[$ARGS.named.start,(join($ARGS.named.sign)),$ARGS.named.end] | join("")'
+}
+
+join "${@}"

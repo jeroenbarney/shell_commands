@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -Eeu
+
+function rep(){
+    for ((i=0;i<${1}; i++)) {
+        printf "${2}"
+    }
+}
+rep "${@}"

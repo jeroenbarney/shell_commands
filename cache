@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -Eeu
+
+mkdir -p cache
+declare file="cache/$(printf '%s' "${@}" | md5sum | awk '{print $1}')"
+if [ ! -f "${file}" ]; then
+  jq -nc '{cmd: $ARGS.positional, output: $ARGS.named.output}' --arg output "$("${@}")" --args "${@}" > "${file}"
+fi
+
+cat "${file}" | jq .output -r
+	

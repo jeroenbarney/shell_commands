@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+set -Eeu
+
+function to_table(){
+  local data="$([ "${#}" -gt 0 ] && echo "${1}" || cat /dev/stdin)"
+  local length="$(echo "${data}" | jq -r '.[0] | length')"
+  local -a counts=()
+  local index=0
+  local line
+  local horiz='─'
+  local vert='│'
+  local topRight='┌'
+  local topLeft='┐'
+  local bottomRight='└'
+  local bottomLeft='┘'
+  local vertLeft='├'
+  local vertRight='┤'
+  local topMiddle='┬'
+  local bottomMiddle='┴'
+  local cross='┼'
+
+
+  for ((i=0;i<length;i++)) {
+    counts+=("$(echo "${data}" | jq -r "[.[][${i}] | length] | max")")
+  }
+
+  for count in "${counts[@]}"; do
+    rep "$((count + 2))" "${horiz}"
+    echo
+  done | join "${topMiddle}" "${topRight}" "${topLeft}"
+
+  echo "${data}" | jq -r '.[0][]' | while read header; do
+    printf " %-${counts[$index]}s \n" "${header}"
+    ((index+=1))
+  done | join "${vert}" "${vert}" "${vert}"
+
+  for count in "${counts[@]}"; do
+    rep "$((count + 2))" "${horiz}"
+    echo
+  done | join "${cross}" "${vertLeft}" "${vertRight}"
+
+  echo "${data}" | jq -r '.[1:][] | @base64' | while read line; do
+    for ((i=0;i<length;i++)) {
+      printf " %-${counts[$i]}s \n" "$(echo "${line}" | base64 -d | jq -r ".[$i]")"
+    } | join "${vert}" "${vert}" "${vert}"
+  done
+
+  for count in "${counts[@]}"; do
+    rep "$((count+2))" "${horiz}"
+    echo
+  done | join "${bottomMiddle}" "${bottomRight}" "${bottomLeft}"
+}
+
+to_table "${@}"
